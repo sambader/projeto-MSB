@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Fiscalização Contratual – Paraíba Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #070d1a;
+  --surface: #0d1525;
+  --surface2: #111d30;
+  --border: #1e2d45;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --light: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo { width: 38px; height: 38px; background: linear-gradient(135deg, #38bdf8, #818cf8); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.header-title { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+.header-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sync-info { font-size: 11px; color: var(--muted); }
+.btn { padding: 7px 14px; border-radius: 8px; border: 1px solid; cursor: pointer; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.2s; background: none; }
+.btn-primary { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.08); }
+.btn-primary:hover { background: rgba(56,189,248,0.15); }
+.btn-secondary { border-color: var(--border); color: var(--light); }
+.btn-secondary:hover { background: var(--surface2); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tabs { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; display: flex; gap: 2px; overflow-x: auto; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 13px 18px; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; transition: all 0.2s; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover:not(.active) { color: var(--light); }
+.content { padding: 24px 28px; max-width: 1400px; }
+.grid { display: grid; gap: 16px; }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+.card-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.kpi-card { background: var(--surface); border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+.kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.kpi-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 2px; }
+.kpi-sub { font-size: 12px; color: var(--light); }
+.kpi-icon { position: absolute; top: 14px; right: 14px; opacity: 0.5; font-size: 22px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-success { background: rgba(52,211,153,0.15); color: #34d399; }
+.badge-warning { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.badge-info { background: rgba(56,189,248,0.15); color: #38bdf8; }
+.badge-purple { background: rgba(129,140,248,0.15); color: #818cf8; }
+.badge-gray { background: rgba(100,116,139,0.2); color: #94a3b8; }
+.badge-danger { background: rgba(248,113,113,0.15); color: #f87171; }
+.progress-wrap { background: rgba(255,255,255,0.06); border-radius: 8px; height: 6px; overflow: hidden; }
+.progress-bar { height: 100%; border-radius: 8px; transition: width 0.8s ease; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.os-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; border-left: 4px solid var(--accent2); }
+.os-title { font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.os-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.os-desc { font-size: 12px; color: var(--light); line-height: 1.6; }
+.list-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.list-item:last-child { border-bottom: none; }
+.list-key { font-size: 11px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+.list-summary { font-size: 13px; color: var(--text); flex: 1; line-height: 1.4; }
+.list-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.fin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.fin-label { font-size: 13px; color: var(--light); }
+.fin-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-wrap { position: relative; width: 100%; height: 260px; }
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 48px; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.alert-card { border-radius: 10px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.alert-danger { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); }
+.alert-warning { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); }
+.alert-info { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 90%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: #f1f5f9; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; font-weight: 600; }
+.form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus { border-color: var(--accent); }
+.os-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin: 20px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.tag { display: inline-block; background: rgba(56,189,248,0.1); color: var(--accent); border: 1px solid rgba(56,189,248,0.2); border-radius: 6px; padding: 2px 8px; font-size: 11px; }
+.hidden { display: none !important; }
+.risk-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.risk-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.risk-label { flex: 1; font-size: 13px; color: var(--text); }
+.risk-badge { font-size: 11px; font-weight: 600; }
+.timeline-item { display: flex; gap: 14px; padding-bottom: 20px; position: relative; }
+.timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 7px; top: 16px; bottom: 0; width: 1px; background: var(--border); }
+.timeline-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+.timeline-content { flex: 1; }
+.timeline-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.timeline-sub { font-size: 12px; color: var(--muted); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">🏛️</div>
+    <div>
+      <div class="header-title">Fiscalização Contratual – Paraíba Digital</div>
+      <div class="header-sub">SEMTD · Governo do Estado da Paraíba · Contrato MSB 2025–2026 · Projeto FISCTI</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="sync-info" id="syncInfo">Aguardando sincronização...</span>
+    <button class="btn btn-primary" id="syncBtn" onclick="fetchJiraData()">
+      <span id="syncIcon">⟳</span> Sincronizar Jira
+    </button>
+    <button class="btn btn-secondary" onclick="openSettings()">⚙ Configurar</button>
+    <button class="btn btn-secondary" onclick="exportPDF()">↓ Exportar PDF</button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('executivo', this)">📊 Dashboard Executivo</button>
+  <button class="tab" onclick="switchTab('os', this)">📋 Ordens de Serviço</button>
+  <button class="tab" onclick="switchTab('financeiro', this)">💰 Dashboard Financeiro</button>
+  <button class="tab" onclick="switchTab('governanca', this)">🛡️ Governança</button>
+</div>
+
+<!-- ===== EXECUTIVO TAB ===== -->
+<div class="content" id="tab-executivo">
+  <div id="loading-exec" class="loading-state">
+    <div class="spinner"></div>
+    <div style="font-size:13px;color:var(--muted)">Conectando ao Jira – Paraíba Digital...</div>
+  </div>
+  <div id="exec-content" class="hidden fade-in">
+    <!-- KPI Row -->
+    <div class="grid grid-4" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-top:3px solid var(--accent)">
+        <div class="kpi-label">Total de Issues</div>
+        <div class="kpi-value" id="kpi-total" style="color:var(--accent)">—</div>
+        <div class="kpi-sub" id="kpi-total-sub">epics · tarefas · subtarefas</div>
+        <div class="kpi-icon">📦</div>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid var(--warning)">
+        <div class="kpi-label">Em Execução</div>
+        <div class="kpi-value" id="kpi-exec" style="color:var(--warning)">—</div>
+        <div class="kpi-sub">OSs em andamento</div>
+        <div class="kpi-icon">⚡</div>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid var(--success)">
+        <div class="kpi-label">Aprovados / Concluídos</div>
+        <div class="kpi-value" id="kpi-done" style="color:var(--success)">—</div>
+        <div class="kpi-sub">entregas aceitas</div>
+        <div class="kpi-icon">✅</div>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid var(--muted)">
+        <div class="kpi-label">Aguardando Início</div>
+        <div class="kpi-value" id="kpi-wait" style="color:var(--muted)">—</div>
+        <div class="kpi-sub">pendentes de execução</div>
+        <div class="kpi-icon">⏳</div>
+      </div>
+    </div>
+
+    <!-- Progress row -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">📈 Progresso Geral do Contrato</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:center;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Execução de Issues</span>
+            <span id="pct-issues" style="font-size:13px;font-weight:700;color:var(--accent)">—%</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-bar" id="pb-issues" style="background:var(--accent);width:0%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Aprovação de Entregas</span>
+            <span id="pct-approved" style="font-size:13px;font-weight:700;color:var(--success)">—%</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-bar" id="pb-approved" style="background:var(--success);width:0%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">OSs Ativas</span>
+            <span id="pct-os" style="font-size:13px;font-weight:700;color:var(--warning)">—</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-bar" id="pb-os" style="background:var(--warning);width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-title">🔵 Distribuição por Status</div>
+        <div id="status-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;font-size:12px"></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartStatus" role="img" aria-label="Distribuição de issues por status">Gráfico de pizza com distribuição de issues por status.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🟣 Distribuição por Tipo</div>
+        <div id="type-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;font-size:12px"></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartType" role="img" aria-label="Distribuição de issues por tipo">Gráfico de barras com distribuição por tipo.</canvas></div>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="card">
+      <div class="card-title">🕐 Atividade Recente — Últimas Atualizações</div>
+      <div id="recent-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OS TAB ===== -->
+<div class="content hidden" id="tab-os">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:17px;font-weight:700;color:#f1f5f9">Ordens de Serviço</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Controle detalhado de cada OS vinculada ao contrato MSB</p>
+    </div>
+    <div id="os-count-badge" class="badge badge-info">4 OSs ativas</div>
+  </div>
+  <div id="os-cards-grid" class="grid" style="grid-template-columns:1fr;gap:16px"></div>
+</div>
+
+<!-- ===== FINANCEIRO TAB ===== -->
+<div class="content hidden" id="tab-financeiro">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:17px;font-weight:700;color:#f1f5f9">Dashboard Financeiro</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Acompanhamento financeiro e de UST do contrato</p>
+    </div>
+    <button class="btn btn-secondary" onclick="openSettings()" style="font-size:12px">✏️ Editar Valores</button>
+  </div>
+
+  <!-- Financial KPIs -->
+  <div class="grid grid-4" style="margin-bottom:20px">
+    <div class="kpi-card" style="border-top:3px solid var(--accent)">
+      <div class="kpi-label">Valor Contratado</div>
+      <div class="kpi-value" id="fin-total" style="color:var(--accent);font-size:20px">—</div>
+      <div class="kpi-sub">valor global do contrato</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid var(--accent2)">
+      <div class="kpi-label">Valor Executado</div>
+      <div class="kpi-value" id="fin-exec" style="color:var(--accent2);font-size:20px">—</div>
+      <div class="kpi-sub" id="fin-exec-pct">— do contrato</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid var(--success)">
+      <div class="kpi-label">Valor Pago</div>
+      <div class="kpi-value" id="fin-paid" style="color:var(--success);font-size:20px">—</div>
+      <div class="kpi-sub" id="fin-paid-pct">OSs quitadas</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid var(--warning)">
+      <div class="kpi-label">Valor Pendente</div>
+      <div class="kpi-value" id="fin-pending" style="color:var(--warning);font-size:20px">—</div>
+      <div class="kpi-sub">a liquidar</div>
+    </div>
+  </div>
+
+  <!-- UST row -->
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="kpi-card" style="border-top:3px solid #c084fc">
+      <div class="kpi-label">UST Contratada</div>
+      <div class="kpi-value" id="ust-total" style="color:#c084fc;font-size:22px">—</div>
+      <div class="kpi-sub">unidades de serviço técnico</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid var(--success)">
+      <div class="kpi-label">UST Executada</div>
+      <div class="kpi-value" id="ust-exec" style="color:var(--success);font-size:22px">—</div>
+      <div class="kpi-sub" id="ust-exec-pct">— das USTs</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid var(--muted)">
+      <div class="kpi-label">UST Saldo</div>
+      <div class="kpi-value" id="ust-saldo" style="color:var(--muted);font-size:22px">—</div>
+      <div class="kpi-sub">disponível para novas OSs</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">💰 Valor por Ordem de Serviço</div>
+      <div class="chart-wrap"><canvas id="chartOS" role="img" aria-label="Valor por Ordem de Serviço">Gráfico de barras com valor por OS.</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Comparativo: Contratado vs Executado vs Pago</div>
+      <div class="chart-wrap"><canvas id="chartFinComp" role="img" aria-label="Comparativo financeiro">Comparativo financeiro do contrato.</canvas></div>
+    </div>
+  </div>
+
+  <!-- OS Financial table -->
+  <div class="card">
+    <div class="card-title">📋 Detalhamento Financeiro por OS</div>
+    <div id="fin-table"></div>
+  </div>
+</div>
+
+<!-- ===== GOVERNANÇA TAB ===== -->
+<div class="content hidden" id="tab-governanca">
+  <div style="margin-bottom:20px">
+    <h2 style="font-size:17px;font-weight:700;color:#f1f5f9">Painel de Governança Contratual</h2>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">Riscos, alertas, pendências e indicadores de conformidade</p>
+  </div>
+
+  <!-- Alert cards -->
+  <div style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:12px">🚨 Alertas Automáticos</div>
+    <div id="gov-alerts"></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom:20px">
+    <!-- Risk panel -->
+    <div class="card">
+      <div class="card-title">⚠️ Matriz de Riscos</div>
+      <div id="risk-list"></div>
+    </div>
+
+    <!-- Pending items -->
+    <div class="card">
+      <div class="card-title">📌 Itens Aguardando Ação</div>
+      <div id="pending-list"></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <div class="card-title">🗓️ Timeline Contratual — Marco de Entregas</div>
+    <div id="timeline-list" style="padding-top:8px"></div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="modal-title" style="margin:0">⚙️ Configurações Financeiras</div>
+      <button class="btn btn-secondary" onclick="closeSettings()" style="padding:6px 10px">✕</button>
+    </div>
+    <div class="section-title">Dados Contratuais</div>
+    <div class="os-form-row">
+      <div class="form-group">
+        <label class="form-label">Valor Total do Contrato (R$)</label>
+        <input class="form-input" type="number" id="cfg-contrato" placeholder="18000000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">UST Total Contratada</label>
+        <input class="form-input" type="number" id="cfg-ust-total" placeholder="36000">
+      </div>
+    </div>
+    <div class="section-title">Ordens de Serviço</div>
+    <div id="os-config-list"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeSettings()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSettings()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────
+const CLOUD_ID = 'ed066cc9-312b-4c3b-84af-91fc3ec6e452';
+const PROJECT = 'FISCTI';
+const MCP_URL = 'https://mcp.atlassian.com/v1/mcp';
+
+let jiraData = null;
+let charts = {};
+let fin = {
+  valorContrato: 18000000,
+  ustTotal: 36000,
+  oss: [
+    { id: 'OS-001/2025', valor: 3500000, ust: 7000, pago: true, status: 'Em Execução',
+      desc: 'Desenvolvimento e implantação da plataforma gov digital, login único estadual, serviços digitais, tracking de dados e atendimento ao cidadão.' },
+    { id: 'OS-002/2026', valor: 4200000, ust: 8400, pago: false, status: 'Em Execução',
+      desc: 'Refatoração da autenticação com integração ao SSO CODATA (Keycloak), fluxos OpenID Connect/OAuth2, migração de identidade e ativação gradual.' },
+    { id: 'OS-003/2026', valor: 3800000, ust: 7600, pago: false, status: 'Em Execução',
+      desc: 'Sustentação de aplicações, infraestrutura Kubernetes, monitoramento, CI/CD, gestão de incidentes, segurança e documentação técnica.' },
+    { id: 'OS-004/2026', valor: 4100000, ust: 8200, pago: false, status: 'Em Execução',
+      desc: 'Customização e evolução da plataforma: novos módulos, gestão documental, ouvidoria, soluções Digitize e melhorias funcionais.' }
+  ]
+};
+
+// ─────────────────────────────────────────────────────────────────
+// API CALL
+// ─────────────────────────────────────────────────────────────────
+async function fetchJiraData() {
+  const btn = document.getElementById('syncBtn');
+  const icon = document.getElementById('syncIcon');
+  const info = document.getElementById('syncInfo');
+  btn.disabled = true;
+  icon.style.animation = 'spin 0.8s linear infinite';
+  icon.style.display = 'inline-block';
+  info.textContent = 'Sincronizando...';
+  document.getElementById('loading-exec').classList.remove('hidden');
+  document.getElementById('exec-content').classList.add('hidden');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: `You are a Jira data analyst. Use the Atlassian MCP tools to fetch data from project ${PROJECT} (cloudId: ${CLOUD_ID}).
+Return ONLY a single valid JSON object (no markdown, no backticks, no explanation) with this exact structure:
+{
+  "total": <number: total issues>,
+  "byStatus": [{"name": "<status name>", "count": <number>}],
+  "byType": [{"name": "<type name>", "count": <number>}],
+  "tasks": [{"key": "<FISCTI-NNN>", "summary": "<text>", "status": "<status>", "type": "<type>", "assignee": "<name or null>", "created": "<YYYY-MM-DD>", "updated": "<YYYY-MM-DD>"}],
+  "recent": [{"key": "<FISCTI-NNN>", "summary": "<text>", "status": "<status>", "type": "<type>", "updated": "<YYYY-MM-DD>"}]
+}
+The "recent" array should contain the 10 most recently updated issues. The "tasks" array should contain all Tarefas and Epics.`,
+        messages: [{ role: 'user', content: `Search for all issues in project ${PROJECT} using JQL "project = ${PROJECT} ORDER BY updated DESC" with maxResults 100. Aggregate counts by status and type. Return the JSON.` }],
+        mcp_servers: [{ type: 'url', url: MCP_URL, name: 'atlassian' }]
+      })
+    });
+
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response');
+    jiraData = JSON.parse(match[0]);
+    info.textContent = 'Última sync: ' + new Date().toLocaleTimeString('pt-BR');
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    info.textContent = 'Erro na sync – usando dados demonstrativos';
+    // Use fallback demo data
+    jiraData = buildFallbackData();
+    renderAll();
+  } finally {
+    btn.disabled = false;
+    icon.style.animation = 'none';
+    icon.textContent = '⟳';
+  }
+}
+
+function buildFallbackData() {
+  return {
+    total: 71,
+    byStatus: [
+      { name: 'Em Execução', count: 28 },
+      { name: 'Em Andamento', count: 18 },
+      { name: 'Aprovado', count: 11 },
+      { name: 'Aguardando Início', count: 14 }
+    ],
+    byType: [
+      { name: 'Subtask', count: 45 },
+      { name: 'Tarefa', count: 22 },
+      { name: 'Epic', count: 4 }
+    ],
+    tasks: [
+      { key: 'FISCTI-61', summary: 'OS-001/2025 – Plataforma Gov Digital', status: 'Em Execução', type: 'Tarefa', assignee: 'Samir Badarou', created: '2026-04-22', updated: '2026-05-05' },
+      { key: 'FISCTI-62', summary: 'OS-002/2026 – Refatoração SSO CODATA', status: 'Em Execução', type: 'Tarefa', assignee: 'Samir Badarou', created: '2026-04-22', updated: '2026-05-05' },
+      { key: 'FISCTI-63', summary: 'OS-003/2026 – Sustentação Infraestrutura', status: 'Em Execução', type: 'Tarefa', assignee: 'Samir Badarou', created: '2026-04-22', updated: '2026-05-05' },
+      { key: 'FISCTI-64', summary: 'OS-004/2026 – Customização e Evolução', status: 'Em Execução', type: 'Tarefa', assignee: 'Samir Badarou', created: '2026-04-22', updated: '2026-05-05' },
+      { key: 'FISCTI-60', summary: 'Fiscalização Contratural MSB 2025-2026', status: 'Em Andamento', type: 'Epic', assignee: null, created: '2026-04-22', updated: '2026-04-22' }
+    ],
+    recent: [
+      { key: 'FISCTI-71', summary: 'TFD – Gestão Documental', status: 'Aguardando Início', type: 'Subtask', updated: '2026-05-04' },
+      { key: 'FISCTI-70', summary: 'TFD – Ouvidoria', status: 'Em Andamento', type: 'Subtask', updated: '2026-05-04' },
+      { key: 'FISCTI-69', summary: 'TFD – Soluções Digitize', status: 'Em Andamento', type: 'Subtask', updated: '2026-05-04' },
+      { key: 'FISCTI-65', summary: 'Entrega – OS-001', status: 'Aprovado', type: 'Subtask', updated: '2026-05-05' },
+      { key: 'FISCTI-66', summary: 'Entrega – OS-002', status: 'Aguardando Início', type: 'Subtask', updated: '2026-05-05' },
+      { key: 'FISCTI-64', summary: 'OS-004/2026', status: 'Em Execução', type: 'Tarefa', updated: '2026-05-05' },
+      { key: 'FISCTI-63', summary: 'OS-003/2026', status: 'Em Execução', type: 'Tarefa', updated: '2026-05-05' },
+      { key: 'FISCTI-62', summary: 'OS-002/2026', status: 'Em Execução', type: 'Tarefa', updated: '2026-05-05' },
+      { key: 'FISCTI-61', summary: 'OS-001/2025', status: 'Em Execução', type: 'Tarefa', updated: '2026-05-05' },
+      { key: 'FISCTI-60', summary: 'Fiscalização Contratural MSB 2025-2026', status: 'Em Andamento', type: 'Epic', updated: '2026-04-22' }
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RENDER ALL
+// ─────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderExecutivo();
+  renderOS();
+  renderFinanceiro();
+  renderGovernanca();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// EXECUTIVO
+// ─────────────────────────────────────────────────────────────────
+const STATUS_COLORS_MAP = {
+  'Em Execução': '#fbbf24', 'Em Andamento': '#818cf8',
+  'Aprovado': '#34d399', 'Concluído': '#10b981',
+  'Aguardando Início': '#64748b', 'Bloqueado': '#f87171'
+};
+const TYPE_COLORS = { 'Subtask': '#38bdf8', 'Tarefa': '#c084fc', 'Epic': '#fb923c' };
+
+function statusBadgeClass(s) {
+  const m = { 'Em Execução': 'badge-warning', 'Em Andamento': 'badge-purple', 'Aprovado': 'badge-success', 'Concluído': 'badge-success', 'Aguardando Início': 'badge-gray', 'Bloqueado': 'badge-danger' };
+  return m[s] || 'badge-gray';
+}
+
+function renderExecutivo() {
+  const d = jiraData;
+  if (!d) return;
+  document.getElementById('loading-exec').classList.add('hidden');
+  document.getElementById('exec-content').classList.remove('hidden');
+
+  const total = d.total || 0;
+  const execStatus = (d.byStatus || []).find(s => s.name === 'Em Execução');
+  const doneStatus = ['Aprovado','Concluído'].reduce((acc, n) => acc + ((d.byStatus || []).find(s => s.name === n)?.count || 0), 0);
+  const waitStatus = (d.byStatus || []).find(s => s.name === 'Aguardando Início');
+  const execCount = execStatus?.count || 0;
+  const waitCount = waitStatus?.count || 0;
+  const pctIssues = total > 0 ? Math.round(((execCount + doneStatus) / total) * 100) : 0;
+  const pctApproved = total > 0 ? Math.round((doneStatus / total) * 100) : 0;
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-exec').textContent = execCount;
+  document.getElementById('kpi-done').textContent = doneStatus;
+  document.getElementById('kpi-wait').textContent = waitCount;
+  document.getElementById('pct-issues').textContent = pctIssues + '%';
+  document.getElementById('pct-approved').textContent = pctApproved + '%';
+  document.getElementById('pct-os').textContent = fin.oss.length + ' OSs ativas';
+  document.getElementById('pb-issues').style.width = pctIssues + '%';
+  document.getElementById('pb-approved').style.width = pctApproved + '%';
+  document.getElementById('pb-os').style.width = '100%';
+
+  // Charts
+  const statusData = d.byStatus || [];
+  if (charts.status) charts.status.destroy();
+  const statusLegendEl = document.getElementById('status-legend');
+  statusLegendEl.innerHTML = statusData.map(s => {
+    const c = STATUS_COLORS_MAP[s.name] || '#64748b';
+    return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span><span style="color:var(--light)">${s.name} <strong style="color:var(--text)">${s.count}</strong></span></span>`;
+  }).join('');
+
+  charts.status = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: statusData.map(s => s.name),
+      datasets: [{ data: statusData.map(s => s.count), backgroundColor: statusData.map(s => STATUS_COLORS_MAP[s.name] || '#64748b'), borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+
+  const typeData = d.byType || [];
+  if (charts.type) charts.type.destroy();
+  document.getElementById('type-legend').innerHTML = typeData.map(t => {
+    const c = TYPE_COLORS[t.name] || '#818cf8';
+    return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span><span style="color:var(--light)">${t.name} <strong style="color:var(--text)">${t.count}</strong></span></span>`;
+  }).join('');
+
+  charts.type = new Chart(document.getElementById('chartType'), {
+    type: 'bar',
+    data: {
+      labels: typeData.map(t => t.name),
+      datasets: [{ data: typeData.map(t => t.count), backgroundColor: typeData.map(t => TYPE_COLORS[t.name] || '#818cf8'), borderRadius: 8, borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#64748b' } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } } } }
+  });
+
+  // Recent list
+  const recent = d.recent || [];
+  document.getElementById('recent-list').innerHTML = recent.slice(0, 8).map(r => `
+    <div class="list-item">
+      <span class="list-key">${r.key}</span>
+      <span class="list-summary">${r.summary}</span>
+      <span class="badge ${statusBadgeClass(r.status)}" style="margin-right:8px">${r.status}</span>
+      <span class="list-meta">${r.updated || '—'}</span>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OS TAB
+// ─────────────────────────────────────────────────────────────────
+function renderOS() {
+  const jiraMap = {};
+  if (jiraData && jiraData.tasks) {
+    jiraData.tasks.forEach(t => {
+      const osKey = (t.summary.match(/OS-\d{3}\/\d{4}/) || [])[0];
+      if (osKey) jiraMap[osKey] = t;
+    });
+  }
+
+  document.getElementById('os-cards-grid').innerHTML = fin.oss.map((os, i) => {
+    const jt = jiraMap[os.id];
+    const statusBc = os.pago ? 'badge-success' : (os.status === 'Em Execução' ? 'badge-warning' : 'badge-info');
+    const paidLabel = os.pago ? '✅ Pago' : '⏳ Pendente';
+    const paidBc = os.pago ? 'badge-success' : 'badge-warning';
+    return `<div class="os-card fade-in" style="border-left-color:${['#38bdf8','#818cf8','#34d399','#fbbf24'][i]}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="os-title">${os.id}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge ${statusBc}">${os.status}</span>
+          <span class="badge ${paidBc}">${paidLabel}</span>
+          ${jt ? `<span class="tag">${jt.key}</span>` : ''}
+        </div>
+      </div>
+      <div class="os-desc" style="margin-bottom:14px">${os.desc}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px">VALOR DA OS</div><div style="font-size:16px;font-weight:700;color:#f1f5f9">${fmt(os.valor)}</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px">UST ALOCADA</div><div style="font-size:16px;font-weight:700;color:#c084fc">${fmtN(os.ust)} USTs</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px">% DO CONTRATO</div><div style="font-size:16px;font-weight:700;color:var(--accent)">${Math.round((os.valor/fin.valorContrato)*100)}%</div></div>
+        ${jt ? `<div><div style="font-size:11px;color:var(--muted);margin-bottom:3px">ATUALIZAÇÃO JIRA</div><div style="font-size:14px;font-weight:600;color:var(--light)">${jt.updated}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// FINANCEIRO
+// ─────────────────────────────────────────────────────────────────
+function renderFinanceiro() {
+  const valorExecutado = fin.oss.reduce((s, o) => s + o.valor, 0);
+  const valorPago = fin.oss.filter(o => o.pago).reduce((s, o) => s + o.valor, 0);
+  const valorPendente = valorExecutado - valorPago;
+  const ustExec = fin.oss.reduce((s, o) => s + o.ust, 0);
+  const ustSaldo = fin.ustTotal - ustExec;
+  const pctExec = Math.round((valorExecutado / fin.valorContrato) * 100);
+  const pctPago = Math.round((valorPago / fin.valorContrato) * 100);
+  const pctUst = Math.round((ustExec / fin.ustTotal) * 100);
+
+  document.getElementById('fin-total').textContent = fmt(fin.valorContrato);
+  document.getElementById('fin-exec').textContent = fmt(valorExecutado);
+  document.getElementById('fin-exec-pct').textContent = pctExec + '% do contrato';
+  document.getElementById('fin-paid').textContent = fmt(valorPago);
+  document.getElementById('fin-paid-pct').textContent = fin.oss.filter(o => o.pago).length + ' OSs quitadas';
+  document.getElementById('fin-pending').textContent = fmt(valorPendente);
+  document.getElementById('ust-total').textContent = fmtN(fin.ustTotal);
+  document.getElementById('ust-exec').textContent = fmtN(ustExec);
+  document.getElementById('ust-exec-pct').textContent = pctUst + '% das USTs';
+  document.getElementById('ust-saldo').textContent = fmtN(ustSaldo);
+
+  // Chart OS
+  if (charts.os) charts.os.destroy();
+  charts.os = new Chart(document.getElementById('chartOS'), {
+    type: 'bar',
+    data: {
+      labels: fin.oss.map(o => o.id),
+      datasets: [
+        { label: 'Valor (R$)', data: fin.oss.map(o => o.valor), backgroundColor: fin.oss.map((o,i) => ['#38bdf8','#818cf8','#34d399','#fbbf24'][i]), borderRadius: 8, borderWidth: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#64748b' } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', callback: v => 'R$' + (v/1000000).toFixed(1) + 'M' } } }
+    }
+  });
+
+  // Comparativo chart
+  if (charts.finComp) charts.finComp.destroy();
+  charts.finComp = new Chart(document.getElementById('chartFinComp'), {
+    type: 'bar',
+    data: {
+      labels: ['Contratado', 'Executado', 'Pago', 'Pendente'],
+      datasets: [{
+        data: [fin.valorContrato, valorExecutado, valorPago, valorPendente],
+        backgroundColor: ['#38bdf8', '#818cf8', '#34d399', '#fbbf24'],
+        borderRadius: 8, borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#64748b' } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', callback: v => 'R$' + (v/1000000).toFixed(1) + 'M' } } }
+    }
+  });
+
+  // Fin table
+  document.getElementById('fin-table').innerHTML = `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:10px 8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600">OS</th>
+        <th style="text-align:right;padding:10px 8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600">Valor</th>
+        <th style="text-align:right;padding:10px 8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600">UST</th>
+        <th style="text-align:right;padding:10px 8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600">% Contrato</th>
+        <th style="text-align:center;padding:10px 8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600">Status Pgto</th>
+      </tr></thead>
+      <tbody>
+        ${fin.oss.map(o => `<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+          <td style="padding:12px 8px;font-weight:600;color:#f1f5f9">${o.id}</td>
+          <td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">${fmt(o.valor)}</td>
+          <td style="padding:12px 8px;text-align:right;color:#c084fc;font-variant-numeric:tabular-nums">${fmtN(o.ust)}</td>
+          <td style="padding:12px 8px;text-align:right;color:var(--accent)">${Math.round((o.valor/fin.valorContrato)*100)}%</td>
+          <td style="padding:12px 8px;text-align:center"><span class="badge ${o.pago ? 'badge-success' : 'badge-warning'}">${o.pago ? '✅ Pago' : '⏳ Pendente'}</span></td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--border)">
+          <td style="padding:12px 8px;font-weight:700;color:var(--accent)">TOTAL</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700;color:var(--accent)">${fmt(valorExecutado)}</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700;color:#c084fc">${fmtN(ustExec)}</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700;color:var(--accent)">${pctExec}%</td>
+          <td style="padding:12px 8px;text-align:center">—</td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// GOVERNANÇA
+// ─────────────────────────────────────────────────────────────────
+function renderGovernanca() {
+  const valorExecutado = fin.oss.reduce((s, o) => s + o.valor, 0);
+  const pctExec = Math.round((valorExecutado / fin.valorContrato) * 100);
+  const osPendPgto = fin.oss.filter(o => !o.pago).length;
+  const waitCount = jiraData ? ((jiraData.byStatus || []).find(s => s.name === 'Aguardando Início')?.count || 0) : 14;
+  const total = jiraData ? jiraData.total : 71;
+
+  // Alerts
+  const alerts = [
+    { type: 'warning', icon: '⚠️', title: 'OSs com Pagamento Pendente', msg: `${osPendPgto} OS(s) executadas aguardam processo de pagamento/liquidação: ${fin.oss.filter(o=>!o.pago).map(o=>o.id).join(', ')}.` },
+    { type: 'info', icon: 'ℹ️', title: 'Issues Aguardando Início', msg: `${waitCount} itens no backlog aguardam designação e início de execução. Verificar priorização com a equipe técnica.` },
+    { type: 'info', icon: '📋', title: 'Termos de Formalização de Demandas', msg: '3 TFDs em processo de formalização: Gestão Documental, Ouvidoria e Soluções Digitize. Acompanhar validação.' }
+  ];
+  if (pctExec >= 85) alerts.unshift({ type: 'danger', icon: '🔴', title: 'Atenção: Limite Orçamentário', msg: `${pctExec}% do valor contratual já foi executado. Avaliar necessidade de aditivo contratual.` });
+  document.getElementById('gov-alerts').innerHTML = alerts.map(a => `
+    <div class="alert-card alert-${a.type}">
+      <span style="font-size:18px">${a.icon}</span>
+      <div><div style="font-size:13px;font-weight:600;margin-bottom:4px">${a.title}</div><div style="font-size:12px;color:var(--light);line-height:1.5">${a.msg}</div></div>
+    </div>`).join('');
+
+  // Risks
+  const risks = [
+    { label: 'Prazo de execução das OSs ativas', severity: 'Alto', color: '#f87171' },
+    { label: 'Dependência de validação de TFDs em aberto', severity: 'Médio', color: '#fbbf24' },
+    { label: 'Integração SSO CODATA com tenant legado', severity: 'Médio', color: '#fbbf24' },
+    { label: 'Disponibilidade de ambientes Kubernetes', severity: 'Baixo', color: '#34d399' },
+    { label: 'Documentação técnica das entregas', severity: 'Baixo', color: '#34d399' },
+    { label: 'Comunicação com órgãos parceiros', severity: 'Baixo', color: '#64748b' }
+  ];
+  document.getElementById('risk-list').innerHTML = risks.map(r => `
+    <div class="risk-item">
+      <div class="risk-dot" style="background:${r.color}"></div>
+      <div class="risk-label">${r.label}</div>
+      <span class="badge" style="background:${r.color}22;color:${r.color}">${r.severity}</span>
+    </div>`).join('');
+
+  // Pending
+  const pending = [
+    { label: 'Aprovação dos TFDs (Gestão Documental, Ouvidoria, Digitize)', type: 'Formalização' },
+    { label: `Liquidação de ${osPendPgto} OSs – processo de pagamento`, type: 'Financeiro' },
+    { label: 'Validação das entregas da OS-001/2025', type: 'Entrega' },
+    { label: 'Homologação do módulo SSO CODATA (OS-002)', type: 'Técnico' },
+    { label: 'Relatório mensal de execução – Maio/2026', type: 'Relatório' }
+  ];
+  document.getElementById('pending-list').innerHTML = pending.map(p => `
+    <div class="list-item">
+      <span style="font-size:15px">📌</span>
+      <div style="flex:1"><div style="font-size:13px;color:var(--text);margin-bottom:3px">${p.label}</div>
+      <span class="badge badge-gray">${p.type}</span></div>
+    </div>`).join('');
+
+  // Timeline
+  const timeline = [
+    { date: 'Abr/2026', title: 'Abertura das OSs 2026', desc: 'OS-002, OS-003 e OS-004 abertas para execução', color: '#38bdf8', done: true },
+    { date: 'Abr/2026', title: 'Criação do espaço FISCTI', desc: 'Projeto de fiscalização contratual estruturado no Jira', color: '#818cf8', done: true },
+    { date: 'Mai/2026', title: 'Aprovação TFDs', desc: 'Termos de Formalização de Demandas em validação', color: '#fbbf24', done: false },
+    { date: 'Mai/2026', title: 'Liquidação OS-001/2025', desc: 'Processo de pagamento da OS-001 a ser concluído', color: '#34d399', done: false },
+    { date: 'Jun/2026', title: 'Entrega homologação SSO', desc: 'OS-002 – Refatoração de autenticação CODATA', color: '#c084fc', done: false },
+    { date: 'Jul/2026', title: 'Relatório de execução Q2', desc: 'Prestação de contas semestral ao gestor do contrato', color: '#64748b', done: false }
+  ];
+  document.getElementById('timeline-list').innerHTML = timeline.map(t => `
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:${t.color}22;border:2px solid ${t.color}">${t.done ? '✓' : ''}</div>
+      <div class="timeline-content">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${t.date}</div>
+        <div class="timeline-title">${t.title}</div>
+        <div class="timeline-sub">${t.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
+  document.getElementById('tab-' + id).classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('cfg-contrato').value = fin.valorContrato;
+  document.getElementById('cfg-ust-total').value = fin.ustTotal;
+  document.getElementById('os-config-list').innerHTML = fin.oss.map((os, i) => `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:10px">${os.id}</div>
+      <div class="os-form-row">
+        <div class="form-group"><label class="form-label">Valor (R$)</label>
+          <input class="form-input" type="number" id="os-valor-${i}" value="${os.valor}"></div>
+        <div class="form-group"><label class="form-label">UST</label>
+          <input class="form-input" type="number" id="os-ust-${i}" value="${os.ust}"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <input type="checkbox" id="os-pago-${i}" ${os.pago ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+        <label for="os-pago-${i}" style="font-size:12px;color:var(--light);cursor:pointer">Pagamento quitado</label>
+      </div>
+    </div>`).join('');
+  document.getElementById('settingsModal').classList.remove('hidden');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.add('hidden');
+}
+
+function saveSettings() {
+  fin.valorContrato = Number(document.getElementById('cfg-contrato').value) || fin.valorContrato;
+  fin.ustTotal = Number(document.getElementById('cfg-ust-total').value) || fin.ustTotal;
+  fin.oss.forEach((os, i) => {
+    os.valor = Number(document.getElementById(`os-valor-${i}`).value) || os.valor;
+    os.ust = Number(document.getElementById(`os-ust-${i}`).value) || os.ust;
+    os.pago = document.getElementById(`os-pago-${i}`).checked;
+  });
+  closeSettings();
+  renderOS(); renderFinanceiro(); renderGovernanca();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// EXPORT
+// ─────────────────────────────────────────────────────────────────
+function exportPDF() {
+  window.print();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────
+function fmt(n) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
+}
+function fmtN(n) {
+  return new Intl.NumberFormat('pt-BR').format(n);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+renderOS();
+renderFinanceiro();
+renderGovernanca();
+fetchJiraData();
+</script>
+</body>
+</html>
